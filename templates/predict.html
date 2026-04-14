@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SentiCureify — Analyze</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"/>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="/" class="navbar-brand">
+    <div class="logo-icon">💬</div> SentiCureify
+  </a>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/predict" class="active">Analyze</a>
+    <a href="/product">Products</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/share">Community</a>
+  </div>
+  <div class="nav-cta">
+    {% if session.user_id %}
+      <a href="/my-dashboard" class="btn btn-outline" style="padding:0.4rem 1rem;font-size:0.85rem;">
+        👤 {{ session.user_name }}
+      </a>
+      <a href="/logout" style="font-size:0.82rem;color:var(--ink-3);padding:0.4rem 0.6rem;">Sign out</a>
+    {% else %}
+      <a href="/login"  class="btn btn-outline" style="padding:0.4rem 1rem;font-size:0.85rem;">Login</a>
+      <a href="/signup" class="btn btn-primary"  style="padding:0.4rem 1rem;font-size:0.85rem;">Sign up</a>
+    {% endif %}
+  </div>
+</nav>
+
+<div style="max-width:1100px;margin:0 auto;padding:2rem 1.5rem;display:grid;grid-template-columns:1fr 320px;gap:1.5rem;align-items:start;">
+
+  <!-- Left: analyze form + result -->
+  <div>
+    <div class="page-header">
+      <div class="page-title">Analyze text</div>
+      <div class="page-subtitle">Get instant sentiment — positive, negative, or neutral — with emotion and confidence breakdown.</div>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-danger fade-up"><span class="alert-icon">⚠️</span> {{ error }}</div>
+    {% endif %}
+
+    <div class="card fade-up" style="margin-bottom:1.25rem;">
+      <div class="card-body">
+        <form method="POST" id="analyze-form">
+          <div class="form-group">
+            <label class="form-label">Your text</label>
+            <textarea name="text" class="form-textarea" id="text-input" rows="5"
+              placeholder="e.g. This product exceeded all my expectations. Absolutely love it!"
+            >{{ result.original_text if result else '' }}</textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full btn-lg" id="submit-btn">
+            🔍 Analyze sentiment
+          </button>
+        </form>
+      </div>
+    </div>
+
+    {% if result %}
+    <div class="card fade-up">
+      <div class="result-hero">
+        <div class="result-emoji">{{ result.emoji }}</div>
+        <div class="result-label {{ result.label }}">{{ result.label | capitalize }}</div>
+        <div class="result-confidence">{{ result.confidence }}% confidence · {{ result.grade }}</div>
+      </div>
+      <div class="card-body">
+
+        <div class="section-title">Probability breakdown</div>
+        <div style="margin-bottom:1.5rem;">
+          {% for lbl, color in [('positive','green'),('neutral','gray'),('negative','red')] %}
+          <div class="proba-row">
+            <span class="proba-label">{{ lbl | capitalize }}</span>
+            <div class="proba-bar-wrap">
+              <div class="bar-track">
+                <div class="bar-{{ color }}"
+                     style="width:{{ (result.probabilities[lbl] * 100) | round(1) }}%"></div>
+              </div>
+            </div>
+            <span class="proba-val">{{ (result.probabilities[lbl] * 100) | round(1) }}%</span>
+          </div>
+          {% endfor %}
+        </div>
+
+        <hr class="divider"/>
+
+        <div class="section-title">Emotion analysis</div>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem;">
+          <span class="badge badge-blue">{{ result.primary_emotion }}</span>
+          {% for tag in result.emotion_tags %}
+          <span class="chip">{{ tag }}</span>
+          {% endfor %}
+        </div>
+        <div style="font-size:0.875rem;color:var(--ink-2);margin-bottom:1.25rem;">
+          Tone: <strong>{{ result.tone }}</strong>
+          {% if result.mixed_signal %}
+          · <span style="color:var(--amber);">{{ result.mixed_note }}</span>
+          {% endif %}
+        </div>
+
+        <hr class="divider"/>
+        <div style="display:flex;gap:1.5rem;font-size:0.78rem;color:var(--ink-3);font-family:'DM Mono',monospace;">
+          <span>{{ result.word_count }} words</span>
+          <span>{{ result.char_count }} chars</span>
+          <span>VADER: {{ result.vader_compound }}</span>
+          <span>{{ result.model_used }}</span>
+        </div>
+
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Right: history sidebar -->
+  <div>
+    <div class="card" style="position:sticky;top:76px;">
+      <div class="card-body" style="padding:1.25rem;">
+        <div class="section-title" style="margin-bottom:0.75rem;">
+          {% if session.user_id %}Recent analyses{% else %}Recent (sign in to save){% endif %}
+        </div>
+
+        {% if history %}
+          {% for h in history %}
+          <div style="padding:0.7rem 0;border-bottom:1px solid var(--border);{% if loop.last %}border:none;{% endif %}">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.2rem;">
+              <span class="badge badge-{{ h.sentiment }}">{{ h.sentiment | capitalize }}</span>
+              <span style="font-size:0.72rem;color:var(--ink-3);font-family:monospace;">
+                {{ h.created_at[11:16] if h.created_at else '' }}
+              </span>
+            </div>
+            <div style="font-size:0.8rem;color:var(--ink-2);line-height:1.4;
+                        overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:240px;">
+              {{ h.text }}
+            </div>
+            <div style="font-size:0.72rem;color:var(--ink-3);margin-top:0.2rem;">
+              {{ h.created_at[:10] if h.created_at else '' }}
+              {% if h.emotion %} · {{ h.emotion }}{% endif %}
+            </div>
+          </div>
+          {% endfor %}
+
+          {% if session.user_id %}
+          <a href="/my-dashboard" style="display:block;text-align:center;font-size:0.8rem;
+             color:var(--blue);margin-top:0.75rem;font-weight:500;">
+            View all in My Dashboard →
+          </a>
+          {% endif %}
+
+        {% else %}
+          <div class="empty-state" style="padding:1.5rem 0;">
+            <div class="empty-state-icon">📝</div>
+            <div class="empty-state-text">
+              {% if session.user_id %}No analyses yet. Run your first one!
+              {% else %}<a href="/signup" style="color:var(--blue);">Sign up</a> to save history.
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer class="footer"><span>© 2025 SentiCureify</span><span>Advanced AI Sentiment Analysis</span></footer>
+
+<script>
+document.getElementById('analyze-form').addEventListener('submit', function() {
+  const btn = document.getElementById('submit-btn');
+  btn.innerHTML = '<span class="spinner"></span> Analyzing...';
+  btn.disabled = true;
+});
+</script>
+
+</body>
+</html>

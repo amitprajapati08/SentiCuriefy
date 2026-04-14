@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SentiCureify — My Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"/>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="/" class="navbar-brand">
+    <div class="logo-icon">💬</div> SentiCureify
+  </a>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/predict">Analyze</a>
+    <a href="/product">Products</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/share">Community</a>
+    <a href="/my-dashboard" class="active">My Dashboard</a>
+  </div>
+  <div class="nav-cta">
+    <span style="font-size:0.85rem;color:var(--ink-2);font-weight:500;">👤 {{ user.name }}</span>
+    <a href="/logout" style="font-size:0.82rem;color:var(--ink-3);padding:0.4rem 0.6rem;">Sign out</a>
+  </div>
+</nav>
+
+<div class="page-lg">
+
+  <!-- Header -->
+  <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1rem;">
+    <div>
+      <div class="page-title">My Dashboard</div>
+      <div class="page-subtitle">Welcome back, {{ user.name }} · Member since {{ user.created_at[:10] }}</div>
+    </div>
+    <a href="/predict" class="btn btn-primary">+ New analysis</a>
+  </div>
+
+  <!-- Stats -->
+  <div class="stat-grid fade-up" style="margin-bottom:1.75rem;">
+    <div class="stat-card">
+      <div class="stat-value stat-ink">{{ stats.total }}</div>
+      <div class="stat-label">Total analyses</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value stat-green">{{ stats.positive }}</div>
+      <div class="stat-label">Positive ({{ stats.pos_pct }}%)</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value stat-red">{{ stats.negative }}</div>
+      <div class="stat-label">Negative ({{ stats.neg_pct }}%)</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value stat-amber">{{ stats.neutral }}</div>
+      <div class="stat-label">Neutral ({{ stats.neu_pct }}%)</div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 260px;gap:1.25rem;align-items:start;">
+
+    <!-- History table -->
+    <div class="card fade-up">
+      <div class="card-body">
+        <div class="section-title">Analysis history</div>
+
+        {% if history %}
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:0.875rem;">
+            <thead>
+              <tr style="border-bottom:2px solid var(--border);">
+                <th style="text-align:left;padding:0.6rem 0.75rem;color:var(--ink-3);font-weight:500;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.05em;">Text</th>
+                <th style="text-align:left;padding:0.6rem 0.75rem;color:var(--ink-3);font-weight:500;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.05em;">Sentiment</th>
+                <th style="text-align:left;padding:0.6rem 0.75rem;color:var(--ink-3);font-weight:500;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.05em;">Emotion</th>
+                <th style="text-align:left;padding:0.6rem 0.75rem;color:var(--ink-3);font-weight:500;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.05em;">Date &amp; Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for h in history %}
+              <tr style="border-bottom:1px solid var(--border);transition:background 0.1s;"
+                  onmouseover="this.style.background='var(--surface-2)'"
+                  onmouseout="this.style.background=''">
+                <td style="padding:0.7rem 0.75rem;max-width:320px;">
+                  <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink-2);">
+                    {{ h.text }}
+                  </div>
+                </td>
+                <td style="padding:0.7rem 0.75rem;">
+                  <span class="badge badge-{{ h.sentiment }}">{{ h.sentiment | capitalize }}</span>
+                </td>
+                <td style="padding:0.7rem 0.75rem;color:var(--ink-3);font-size:0.82rem;">
+                  {{ h.emotion or '—' }}
+                </td>
+                <td style="padding:0.7rem 0.75rem;font-family:monospace;font-size:0.8rem;color:var(--ink-3);">
+                  {% if h.created_at %}
+                    <div>{{ h.created_at[:10] }}</div>
+                    <div style="color:var(--ink-3);">{{ h.created_at[11:16] }}</div>
+                  {% else %}—{% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+          <div class="empty-state-icon">📊</div>
+          <div class="empty-state-text">No analyses yet.</div>
+          <a href="/predict" class="btn btn-primary" style="margin-top:1rem;">Run your first analysis</a>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+
+    <!-- Top emotions sidebar -->
+    <div>
+      <div class="card fade-up">
+        <div class="card-body">
+          <div class="section-title">Top emotions</div>
+          {% if stats.top_emotions %}
+            {% for e in stats.top_emotions %}
+            <div class="aspect-row" style="margin-bottom:0.85rem;">
+              <div class="aspect-header">
+                <span class="aspect-name">{{ e.emotion | capitalize }}</span>
+                <span class="aspect-pct">{{ e.cnt }}</span>
+              </div>
+              <div class="bar-track">
+                <div class="bar-blue"
+                     style="width:{{ (e.cnt / stats.total * 100) | round }}%"></div>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+          <div style="font-size:0.85rem;color:var(--ink-3);">Analyze more text to see patterns.</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card fade-up" style="margin-top:1.25rem;">
+        <div class="card-body">
+          <div class="section-title">Sentiment split</div>
+          <div style="margin-bottom:0.75rem;">
+            <div style="display:flex;justify-content:space-between;font-size:0.82rem;margin-bottom:0.3rem;">
+              <span style="color:var(--green);font-weight:500;">Positive</span>
+              <span style="font-family:monospace;color:var(--ink-3);">{{ stats.pos_pct }}%</span>
+            </div>
+            <div class="bar-track"><div class="bar-green" style="width:{{ stats.pos_pct }}%"></div></div>
+          </div>
+          <div style="margin-bottom:0.75rem;">
+            <div style="display:flex;justify-content:space-between;font-size:0.82rem;margin-bottom:0.3rem;">
+              <span style="color:var(--ink-3);font-weight:500;">Neutral</span>
+              <span style="font-family:monospace;color:var(--ink-3);">{{ stats.neu_pct }}%</span>
+            </div>
+            <div class="bar-track"><div class="bar-gray" style="width:{{ stats.neu_pct }}%"></div></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:0.82rem;margin-bottom:0.3rem;">
+              <span style="color:var(--red);font-weight:500;">Negative</span>
+              <span style="font-family:monospace;color:var(--ink-3);">{{ stats.neg_pct }}%</span>
+            </div>
+            <div class="bar-track"><div class="bar-red" style="width:{{ stats.neg_pct }}%"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer class="footer"><span>© 2025 SentiCureify</span><span>Advanced AI Sentiment Analysis</span></footer>
+</body>
+</html>

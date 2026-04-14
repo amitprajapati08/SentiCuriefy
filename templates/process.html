@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Process Explanation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .gradient-text {
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            background-image: linear-gradient(to right, #3b82f6, #8b5cf6);
+        }
+        .flip-card {
+            perspective: 1000px;
+            height: 400px;
+        }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.8s;
+            transform-style: preserve-3d;
+        }
+        .flip-card:hover .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+        }
+        .flip-card-front {
+            border-radius: 0.75rem;
+            overflow: hidden;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .flip-card-back {
+            transform: rotateY(180deg);
+            border-radius: 0.75rem;
+            overflow: hidden;
+        }
+        .process-section {
+            @apply my-8 glass-card rounded-xl shadow-lg p-6 relative overflow-hidden;
+        }
+        .step-card {
+            @apply p-4 border rounded-lg mb-4 hover:shadow-lg transition-all duration-300 bg-white bg-opacity-90;
+        }
+        .viz-container {
+            @apply my-4 p-4 bg-white bg-opacity-70 rounded-lg hover:shadow-lg transition-all duration-300;
+        }
+        .stat-card {
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .floating-icon {
+            animation: float 6s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Navigation -->
+        <nav class="flex justify-between items-center mb-8 p-4 glass-card rounded-xl shadow-lg">
+            <a href="/" class="text-2xl font-bold flex items-center">
+                <i class="fas fa-robot mr-2 text-3xl text-blue-600"></i>
+                <span class="gradient-text">SentiCureify</span>
+            </a>
+            <div class="space-x-2 md:space-x-6">
+                <a href="/" class="px-4 py-2 rounded-lg bg-white hover:bg-blue-600 hover:text-white transition-all duration-300 shadow-md flex items-center">
+                    <i class="fas fa-home mr-2"></i>
+                    <span>Home</span>
+                </a>
+                <a href="/predict" class="px-4 py-2 rounded-lg bg-white hover:bg-blue-600 hover:text-white transition-all duration-300 shadow-md flex items-center">
+                    <i class="fas fa-chart-line mr-2"></i>
+                    <span>Analyze</span>
+                </a>
+            </div>
+        </nav>
+
+        <!-- Header Section -->
+        <div class="text-center mb-12 glass-card p-8 rounded-xl shadow-lg relative overflow-hidden">
+            <div class="absolute -right-16 -top-16 w-64 h-64 bg-blue-200 rounded-full opacity-40 blur-3xl"></div>
+            <div class="absolute -left-16 -bottom-16 w-64 h-64 bg-purple-200 rounded-full opacity-40 blur-3xl"></div>
+            
+            <h1 class="text-4xl font-bold mb-4 relative z-10">
+                <i class="fas fa-cogs mr-3 text-blue-600"></i>
+                <span class="gradient-text">How It Works</span>
+            </h1>
+            <p class="text-lg text-gray-600 max-w-2xl mx-auto relative z-10">
+                Explore the technology and process behind our sentiment analysis system
+            </p>
+        </div>
+
+        <!-- Process Cards Grid -->
+        <div class="grid md:grid-cols-2 gap-8 mb-16">
+            <!-- Accessibility Review Card -->
+            <div class="flip-card">
+                <div class="flip-card-inner">
+                    <div class="flip-card-front">
+                        <img src="/static/img/Accessibility Review.png" alt="Accessibility Review" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flip-card-back glass-card p-6">
+                        <h3 class="text-2xl font-bold mb-4 gradient-text">Accessibility Review</h3>
+                        <p class="text-gray-600 text-lg">Detailed analysis of text accessibility and readability metrics to ensure comprehensive sentiment analysis.</p>
+                        <div class="mt-4 flex justify-center">
+                            <i class="fas fa-universal-access text-4xl text-blue-500 floating-icon"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sentiment Distribution Card -->
+            <div class="flip-card">
+                <div class="flip-card-inner">
+                    <div class="flip-card-front">
+                        <img src="/static/img/Sentiments Distributions.png" alt="Sentiment Distribution" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flip-card-back glass-card p-6">
+                        <h3 class="text-2xl font-bold mb-4 gradient-text">Sentiment Distribution</h3>
+                        <p class="text-gray-600 text-lg">Statistical distribution of various sentiment categories across analyzed text samples.</p>
+                        <div class="mt-4 flex justify-center">
+                            <i class="fas fa-chart-pie text-4xl text-purple-500 floating-icon"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Category Rank Card -->
+            <div class="flip-card">
+                <div class="flip-card-inner">
+                    <div class="flip-card-front">
+                        <img src="/static/img/Sentiment category Rank.png" alt="Category Ranking" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flip-card-back glass-card p-6">
+                        <h3 class="text-2xl font-bold mb-4 gradient-text">Category Ranking</h3>
+                        <p class="text-gray-600 text-lg">Hierarchical ranking of sentiment categories based on frequency and impact.</p>
+                        <div class="mt-4 flex justify-center">
+                            <i class="fas fa-sort-amount-down text-4xl text-green-500 floating-icon"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flip-card">
+                <div class="flip-card-inner">
+                    <div class="flip-card-front">
+                        <img src="/static/img/image.png" alt="Visualization" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flip-card-back glass-card p-6">
+                        <h3 class="text-2xl font-bold mb-4 gradient-text">Data Visualization</h3>
+                        <p class="text-gray-600 text-lg">Advanced visualization techniques help identify patterns in sentiment analysis results.</p>
+                        <div class="mt-4 flex justify-center">
+                            <i class="fas fa-chart-line text-4xl text-blue-500 floating-icon"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    
+            <!-- Stopwords Card -->
+            <div class="flip-card">
+                <div class="flip-card-inner">
+                    <div class="flip-card-front">
+                        <img src="/static/img/stopwords.png" alt="Stopwords Analysis" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flip-card-back glass-card p-6">
+                        <h3 class="text-2xl font-bold mb-4 gradient-text">Stopwords Analysis</h3>
+                        <p class="text-gray-600 text-lg">Processing and filtering of common stopwords to improve sentiment analysis accuracy.</p>
+                        <div class="mt-4 flex justify-center">
+                            <i class="fas fa-filter text-4xl text-yellow-500 floating-icon"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="process-section">
+            <div class="absolute -right-16 -top-16 w-48 h-48 bg-blue-200 rounded-full opacity-30 blur-3xl"></div>
+            
+            <h2 class="text-2xl font-bold mb-6 relative z-10">
+                <i class="fas fa-code-branch mr-2 text-blue-600"></i>
+                <span class="gradient-text">Text Processing Pipeline</span>
+            </h2>
+            
+            <div class="flow-diagram relative z-10">
+                <div class="step-card border-blue-100 hover:border-blue-300">
+                    <h3 class="font-semibold text-lg flex items-center text-blue-700">
+                        <i class="fas fa-file-alt mr-2 text-blue-500"></i>Input Text
+                    </h3>
+                    <p class="ml-6 text-gray-600">Raw text input from users or datasets</p>
+                </div>            <!-- Summary Stats -->
+                ite p-6 rounded-xl shadow-lg">
+                <div class="step-card border-purple-100 hover:border-purple-300">tatistics</h3>
+                    <h3 class="font-semibold text-lg flex items-center text-purple-700">ontainer">
+                        <i class="fas fa-filter mr-2 text-purple-500"></i>Preprocessing
+                    </h3>
+                    <ul class="list-disc ml-10 text-gray-600 space-y-1">
+                        <li>Remove URLs and special characters</li>
+                        <li>Convert to lowercase</li>
+                        <li>Remove stopwords</li>        <!-- Add JavaScript to load stats -->
+                        <li>Tokenization</li>
+                        <li>Lemmatization</li>h('/static/plots/stats.json')
+                    </ul>on())
+                </div>
+                ner = document.getElementById('stats-container');
+                <div class="step-card border-green-100 hover:border-green-300">
+                    <h3 class="font-semibold text-lg flex items-center text-green-700">rd bg-blue-50 p-4 rounded-lg">
+                        <i class="fas fa-robot mr-2 text-green-500"></i>VADER Processing
+                    </h3>p>
+                    <p class="ml-6 text-gray-600">Text is processed through the VADER sentiment analysis algorithm</p>
+                </div>lass="stat-card bg-green-50 p-4 rounded-lg">
+                
+                <div class="step-card border-indigo-100 hover:border-indigo-300">t.toFixed(1)}%</p>
+                    <h3 class="font-semibold text-lg flex items-center text-indigo-700">
+                        <i class="fas fa-chart-bar mr-2 text-indigo-500"></i>Score Generationlass="stat-card bg-red-50 p-4 rounded-lg">
+                    </h3>
+                    <p class="ml-6 text-gray-600">Sentiment scores are calculated and normalized</p>t.toFixed(1)}%</p>
+                </div>
+            </div>lass="stat-card bg-gray-50 p-4 rounded-lg">
+        </div>
+d(2)}</p>
+        <div class="process-section">
+            <div class="absolute -left-16 -bottom-16 w-48 h-48 bg-purple-200 rounded-full opacity-30 blur-3xl"></div>
+            
+            <h2 class="text-2xl font-bold mb-6 relative z-10">
+                <i class="fas fa-chart-bar mr-2 text-purple-600"></i>
+                <span class="gradient-text">VADER Sentiment Analysis</span>
+            </h2>    <script>
+            <p class="mb-6 text-gray-600 text-lg relative z-10">VADER (Valence Aware Dictionary and sEntiment Reasoner) is specifically attuned to sentiments in social media. The analyzer provides scores for:</p>dd smooth scrolling
+            ll('a[href^="#"]').forEach(anchor => {
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+                <div class="glass-card p-6 rounded-lg hover:shadow-lg transition-all duration-300 border border-green-100">
+                    <h3 class="font-semibold mb-2 text-lg flex items-center text-green-700">tor(this.getAttribute('href')).scrollIntoView({
+                        <i class="fas fa-thumbs-up mr-2 text-green-500"></i>Positive Score
+                    </h3>
+                    <p class="text-gray-600">Measures the positive sentiment intensity in the analyzed text</p>
+                </div>
+                <div class="glass-card p-6 rounded-lg hover:shadow-lg transition-all duration-300 border border-red-100">t>
+                    <h3 class="font-semibold mb-2 text-lg flex items-center text-red-700">
+                        <i class="fas fa-thumbs-down mr-2 text-red-500"></i>Negative Score
+                    </h3>                    <p class="text-gray-600">Measures the negative sentiment intensity in the analyzed text</p>
+                </div>
+                <div class="glass-card p-6 rounded-lg hover:shadow-lg transition-all duration-300 border border-gray-100">
+                    <h3 class="font-semibold mb-2 text-lg flex items-center text-gray-700">
+                        <i class="fas fa-balance-scale mr-2 text-gray-500"></i>Neutral Score
+                    </h3>
+                    <p class="text-gray-600">Measures neutral sentiment content that doesn't express positivity or negativity</p>
+                </div>
+                <div class="glass-card p-6 rounded-lg hover:shadow-lg transition-all duration-300 border border-blue-100">
+                    <h3 class="font-semibold mb-2 text-lg flex items-center text-blue-700">
+                        <i class="fas fa-chart-line mr-2 text-blue-500"></i>Compound Score
+                    </h3>
+                    <p class="text-gray-600">Aggregated score normalized between -1 and 1, representing overall sentiment</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visualizations Section -->
+        <div class="process-section">
+            <div class="absolute -right-16 -bottom-16 w-48 h-48 bg-indigo-200 rounded-full opacity-30 blur-3xl"></div>
+            
+            <h2 class="text-2xl font-bold mb-6 relative z-10">
+                <i class="fas fa-chart-pie mr-2 text-indigo-600"></i>
+                <span class="gradient-text">Analysis Results</span>
+            </h2>
+            
+            <div class="grid md:grid-cols-2 gap-8 relative z-10">
+                <div class="viz-container shadow-sm hover:shadow-md border border-blue-50">
+                    <h3 class="text-xl font-semibold mb-4 text-blue-700">Word Cloud</h3>
+                    <img src="/static/plots/wordcloud.png" alt="Word Cloud" class="mx-auto rounded-lg border border-gray-100">
+                </div>
+
+                <div class="viz-container shadow-sm hover:shadow-md border border-purple-50">
+                    <h3 class="text-xl font-semibold mb-4 text-purple-700">Sentiment Distribution</h3>
+                    <img src="/static/plots/sentiment_dist.png" alt="Sentiment Distribution" class="mx-auto rounded-lg border border-gray-100">
+                </div>
+
+                <div class="viz-container shadow-sm hover:shadow-md border border-green-50">
+                    <h3 class="text-xl font-semibold mb-4 text-green-700">Accessibility Analysis</h3>
+                    <img src="/static/img/Accessibility Review.png" alt="Accessibility Analysis" class="mx-auto rounded-lg border border-gray-100">
+                </div>
+            </div>
+
+            <!-- Summary Stats -->
+            <div class="mt-8 glass-card p-6 rounded-xl relative z-10">
+                <h3 class="text-xl font-semibold mb-6 gradient-text">Summary Statistics</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="stats-container">
+                    <!-- Stats will be populated via JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Add JavaScript to load stats -->
+        <script>
+            fetch('/static/plots/stats.json')
+                .then(response => response.json())
+                .then(stats => {
+                    const container = document.getElementById('stats-container');
+                    container.innerHTML = `
+                        <div class="stat-card bg-blue-50 p-5 rounded-lg shadow-sm border border-blue-100 hover:border-blue-200">
+                            <h4 class="font-semibold text-blue-700 mb-2 flex items-center">
+                                <i class="fas fa-database mr-2 text-blue-500"></i>Total Reviews
+                            </h4>
+                            <p class="text-3xl font-bold text-blue-600">${stats.total_reviews}</p>
+                        </div>
+                        <div class="stat-card bg-green-50 p-5 rounded-lg shadow-sm border border-green-100 hover:border-green-200">
+                            <h4 class="font-semibold text-green-700 mb-2 flex items-center">
+                                <i class="fas fa-smile mr-2 text-green-500"></i>Positive
+                            </h4>
+                            <p class="text-3xl font-bold text-green-600">${stats.positive_pct.toFixed(1)}%</p>
+                        </div>
+                        <div class="stat-card bg-red-50 p-5 rounded-lg shadow-sm border border-red-100 hover:border-red-200">
+                            <h4 class="font-semibold text-red-700 mb-2 flex items-center">
+                                <i class="fas fa-frown mr-2 text-red-500"></i>Negative
+                            </h4>
+                            <p class="text-3xl font-bold text-red-600">${stats.negative_pct.toFixed(1)}%</p>
+                        </div>
+                        <div class="stat-card bg-indigo-50 p-5 rounded-lg shadow-sm border border-indigo-100 hover:border-indigo-200">
+                            <h4 class="font-semibold text-indigo-700 mb-2 flex items-center">
+                                <i class="fas fa-calculator mr-2 text-indigo-500"></i>Average Score
+                            </h4>
+                            <p class="text-3xl font-bold text-indigo-600">${stats.avg_score.toFixed(2)}</p>
+                        </div>
+                    `;
+                });
+        </script>
+    </div>
+
+    <!-- Footer -->
+    <footer class="py-6 bg-gradient-to-r from-gray-800 to-gray-900 text-white mt-12">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <span class="text-2xl font-bold flex items-center">
+                        <i class="fas fa-robot mr-2"></i>SentiCureify
+                    </span>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="/" class="hover:text-blue-400 transition-colors">
+                        <i class="fas fa-home mr-1"></i>Home
+                    </a>
+                    <a href="/predict" class="hover:text-blue-400 transition-colors">
+                        <i class="fas fa-chart-line mr-1"></i>Analyze
+                    </a>
+                </div>
+            </div>
+            <div class="text-center mt-6 text-gray-400 text-sm">
+                &copy; 2025 SentiCureify - Advanced Sentiment Analysis
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Add smooth scrolling
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>

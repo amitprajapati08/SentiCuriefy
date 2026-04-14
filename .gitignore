@@ -1,0 +1,8 @@
+env/
+__pycache__/
+*.pyc
+*.db
+*.bak
+.vscode/
+*.log
+*.env

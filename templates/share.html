@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SentiCureify — Share Your Story</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .glass-card {
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.4);
+        }
+        .gradient-text {
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            background-image: linear-gradient(to right, #3b82f6, #8b5cf6);
+        }
+
+        /* ── Category pill selection ──────────────────────────────────── */
+        .cat-btn {
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+        }
+        .cat-btn:hover  { transform: translateY(-2px); }
+        .cat-btn.active { border-color: #6366f1; background: #eef2ff; }
+
+        /* ── Mood button selection ────────────────────────────────────── */
+        .mood-btn {
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 8px 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        .mood-btn:hover  { transform: translateY(-3px); background: #f5f3ff; }
+        .mood-btn.active {
+            border-color: #6366f1;
+            background: #eef2ff;
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px -2px rgba(99,102,241,0.3);
+        }
+        .mood-emoji { font-size: 28px; line-height: 1; }
+
+        /* ── Result score ring ────────────────────────────────────────── */
+        .score-ring {
+            width: 100px; height: 100px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px; font-weight: 800;
+            margin: 0 auto;
+        }
+
+        /* ── Scroll reveal ───────────────────────────────────────────── */
+        @keyframes fadeSlideUp {
+            from { opacity:0; transform:translateY(20px); }
+            to   { opacity:1; transform:translateY(0);    }
+        }
+        .fade-in { animation: fadeSlideUp 0.5s ease forwards; }
+
+        /* ── Recent card hover ───────────────────────────────────────── */
+        .recent-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .recent-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px -8px rgba(99,102,241,0.15);
+        }
+
+        /* ── Navbar CTA pulse ────────────────────────────────────────── */
+        @keyframes navPulse {
+            0%,100% { box-shadow: 0 0 0 0   rgba(99,102,241,.45); }
+            50%     { box-shadow: 0 0 0 7px rgba(99,102,241,0);   }
+        }
+        .nav-cta { animation: navPulse 2.5s infinite; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-screen">
+
+<div class="container mx-auto px-4 py-8">
+
+    <!-- ── Navbar ──────────────────────────────────────────────────────── -->
+    <nav class="flex justify-between items-center mb-8 p-4 glass-card rounded-xl shadow-lg">
+        <a href="/" class="text-2xl font-bold flex items-center gap-2">
+            <i class="fas fa-robot text-3xl text-blue-600"></i>
+            <span class="gradient-text">SentiCureify</span>
+        </a>
+        <div class="flex items-center gap-3">
+            <a href="/"
+               class="px-4 py-2 rounded-lg bg-white hover:bg-gray-50
+                      text-gray-500 hover:text-gray-800
+                      transition-all shadow-sm flex items-center gap-2 text-sm font-medium">
+                <i class="fas fa-home text-gray-400"></i>Home
+            </a>
+            <a href="/predict"
+               class="nav-cta px-5 py-2 rounded-lg
+                      bg-gradient-to-r from-blue-600 to-indigo-600
+                      text-white text-sm font-semibold
+                      hover:from-blue-700 hover:to-indigo-700
+                      transition-all shadow-md flex items-center gap-2">
+                <i class="fas fa-magic"></i>Analyze Text
+            </a>
+        </div>
+    </nav>
+
+    <!-- ── Page header ─────────────────────────────────────────────────── -->
+    <div class="text-center mb-10">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full
+                    bg-purple-50 border border-purple-100
+                    text-purple-600 text-sm font-medium mb-4">
+            <i class="fas fa-heart text-pink-400 text-xs"></i>
+            Anonymous &amp; safe — no account needed
+        </div>
+        <h1 class="text-4xl md:text-5xl font-extrabold gradient-text mb-3">Share Your Story</h1>
+        <p class="text-gray-500 text-lg max-w-xl mx-auto">
+            Tell us what you're going through. Your words are analysed instantly
+            and stored anonymously to help us understand real human experiences.
+        </p>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         RESULT CARD — shown after submission
+    ═══════════════════════════════════════════════════════════════════ -->
+    {% if submitted %}
+    <div class="max-w-2xl mx-auto mb-10 fade-in">
+        <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
+
+            <!-- Result header band -->
+            <div class="{% if result.sentiment == 'Positive' %}bg-gradient-to-r from-green-500 to-teal-500
+                        {% elif result.sentiment == 'Negative' %}bg-gradient-to-r from-red-500 to-pink-500
+                        {% else %}bg-gradient-to-r from-blue-500 to-indigo-500{% endif %}
+                        px-8 py-5 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium opacity-80">Result for {{ name }}</p>
+                        <h3 class="text-2xl font-bold mt-1">
+                            {% if result.sentiment == 'Positive' %}
+                                <i class="fas fa-smile-beam mr-2"></i>You're feeling Positive
+                            {% elif result.sentiment == 'Negative' %}
+                                <i class="fas fa-heart mr-2"></i>You're going through something tough
+                            {% else %}
+                                <i class="fas fa-meh mr-2"></i>You're feeling Neutral
+                            {% endif %}
+                        </h3>
+                    </div>
+                    <!-- Score ring -->
+                    <div class="score-ring bg-white bg-opacity-20 text-white border-4
+                                border-white border-opacity-40">
+                        {{ (result.score * 100)|int }}%
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-8">
+                <!-- Their text -->
+                <div class="bg-gray-50 rounded-xl p-4 mb-6 border border-gray-100">
+                    <p class="text-xs text-gray-400 mb-1 uppercase tracking-wide font-medium">What you shared</p>
+                    <p class="text-gray-700 italic">"{{ raw_text }}"</p>
+                </div>
+
+                <!-- Score breakdown -->
+                <div class="grid grid-cols-3 gap-4 mb-6">
+                    <div class="text-center p-3 bg-green-50 rounded-xl border border-green-100">
+                        <div class="text-xl font-bold text-green-600">{{ "%.2f"|format(result.pos) }}</div>
+                        <div class="text-xs text-gray-500 mt-1"><i class="fas fa-thumbs-up text-green-400 mr-1"></i>Positive</div>
+                    </div>
+                    <div class="text-center p-3 bg-gray-50 rounded-xl border border-gray-100">
+                        <div class="text-xl font-bold text-gray-600">{{ "%.2f"|format(result.neu) }}</div>
+                        <div class="text-xs text-gray-500 mt-1"><i class="fas fa-minus text-gray-400 mr-1"></i>Neutral</div>
+                    </div>
+                    <div class="text-center p-3 bg-red-50 rounded-xl border border-red-100">
+                        <div class="text-xl font-bold text-red-600">{{ "%.2f"|format(result.neg) }}</div>
+                        <div class="text-xs text-gray-500 mt-1"><i class="fas fa-thumbs-down text-red-400 mr-1"></i>Negative</div>
+                    </div>
+                </div>
+
+                <!-- Progress bar -->
+                <div class="mb-6">
+                    <div class="flex justify-between text-xs text-gray-400 mb-1">
+                        <span>Overall score</span>
+                        <span>{{ result.score }}</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-3">
+                        <div class="h-3 rounded-full transition-all duration-700
+                                    {% if result.sentiment == 'Positive' %}bg-green-500
+                                    {% elif result.sentiment == 'Negative' %}bg-red-500
+                                    {% else %}bg-blue-500{% endif %}"
+                             style="width: {{ result.score * 100 }}%"></div>
+                    </div>
+                </div>
+
+                <!-- Advice banner -->
+                <div class="flex items-start gap-3 p-4 rounded-xl
+                            {% if result.sentiment == 'Positive' %}bg-green-50 border border-green-100
+                            {% elif result.sentiment == 'Negative' %}bg-purple-50 border border-purple-100
+                            {% else %}bg-blue-50 border border-blue-100{% endif %}">
+                    <i class="fas fa-lightbulb mt-0.5
+                              {% if result.sentiment == 'Positive' %}text-green-500
+                              {% elif result.sentiment == 'Negative' %}text-purple-500
+                              {% else %}text-blue-500{% endif %}"></i>
+                    <p class="text-sm text-gray-700 leading-relaxed">{{ advice }}</p>
+                </div>
+
+                <!-- CTA row -->
+                <div class="flex flex-col sm:flex-row gap-3 mt-6">
+                    <a href="/share"
+                       class="flex-1 text-center py-3 rounded-xl
+                              bg-gradient-to-r from-indigo-600 to-purple-600
+                              text-white font-semibold text-sm
+                              hover:shadow-lg hover:-translate-y-0.5 transition-all">
+                        <i class="fas fa-plus mr-2"></i>Share another
+                    </a>
+                    <a href="/predict"
+                       class="flex-1 text-center py-3 rounded-xl
+                              bg-white border border-gray-200
+                              text-gray-600 font-medium text-sm
+                              hover:border-indigo-300 hover:text-indigo-600
+                              hover:-translate-y-0.5 transition-all">
+                        <i class="fas fa-magic mr-2"></i>Deep analysis
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         FORM
+    ═══════════════════════════════════════════════════════════════════ -->
+    {% if not submitted %}
+    <div class="max-w-2xl mx-auto mb-12">
+        <div class="glass-card rounded-2xl shadow-xl p-8">
+
+            {% if error %}
+            <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3">
+                <i class="fas fa-exclamation-circle text-red-400"></i>
+                <p class="text-sm text-red-700">{{ error }}</p>
+            </div>
+            {% endif %}
+
+            <form method="POST" action="/share" id="shareForm">
+
+                <!-- ── Anonymous name ─────────────────────────────────── -->
+                <div class="mb-7">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-user-secret text-indigo-400 mr-2"></i>
+                        Your anonymous name or initials
+                    </label>
+                    <input type="text" name="name"
+                           placeholder="e.g. A.P. or just Anonymous"
+                           maxlength="30"
+                           class="w-full px-4 py-3 border border-gray-200 rounded-xl
+                                  focus:ring-2 focus:ring-indigo-300 focus:border-transparent
+                                  outline-none bg-white text-gray-700 text-sm">
+                    <p class="text-xs text-gray-400 mt-1.5">
+                        <i class="fas fa-lock mr-1"></i>Never linked to any real identity
+                    </p>
+                </div>
+
+                <!-- ── Category ───────────────────────────────────────── -->
+                <div class="mb-7">
+                    <label class="block text-sm font-semibold text-gray-700 mb-3">
+                        <i class="fas fa-tags text-indigo-400 mr-2"></i>
+                        What area of life is this about?
+                    </label>
+                    <input type="hidden" name="category" id="categoryInput" value="other">
+                    <div class="grid grid-cols-3 gap-3">
+                        <button type="button" onclick="selectCategory(this, 'mental_health')"
+                                class="cat-btn p-3 rounded-xl bg-white border border-gray-200
+                                       text-center text-sm text-gray-600 shadow-sm">
+                            <div class="text-2xl mb-1">🧠</div>
+                            Mental health
+                        </button>
+                        <button type="button" onclick="selectCategory(this, 'work')"
+                                class="cat-btn p-3 rounded-xl bg-white border border-gray-200
+                                       text-center text-sm text-gray-600 shadow-sm">
+                            <div class="text-2xl mb-1">💼</div>
+                            Work
+                        </button>
+                        <button type="button" onclick="selectCategory(this, 'relationships')"
+                                class="cat-btn p-3 rounded-xl bg-white border border-gray-200
+                                       text-center text-sm text-gray-600 shadow-sm">
+                            <div class="text-2xl mb-1">❤️</div>
+                            Relationships
+                        </button>
+                        <button type="button" onclick="selectCategory(this, 'health')"
+                                class="cat-btn p-3 rounded-xl bg-white border border-gray-200
+                                       text-center text-sm text-gray-600 shadow-sm">
+                            <div class="text-2xl mb-1">🏥</div>
+                            Health
+                        </button>
+                        <button type="button" onclick="selectCategory(this, 'finance')"
+                                class="cat-btn p-3 rounded-xl bg-white border border-gray-200
+                                       text-center text-sm text-gray-600 shadow-sm">
+                            <div class="text-2xl mb-1">💰</div>
+                            Finance
+                        </button>
+                        <button type="button" onclick="selectCategory(this, 'other')"
+                                class="cat-btn active p-3 rounded-xl bg-white border border-gray-200
+                                       text-center text-sm text-gray-600 shadow-sm">
+                            <div class="text-2xl mb-1">🌍</div>
+                            Other
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ── Mood today ──────────────────────────────────────── -->
+                <div class="mb-7">
+                    <label class="block text-sm font-semibold text-gray-700 mb-3">
+                        <i class="fas fa-smile text-indigo-400 mr-2"></i>
+                        How are you feeling today?
+                    </label>
+                    <input type="hidden" name="mood" id="moodInput" value="okay">
+                    <div class="flex flex-wrap gap-3 justify-center">
+                        <button type="button" onclick="selectMood(this, 'awful')"
+                                class="mood-btn bg-white border border-gray-200 shadow-sm">
+                            <span class="mood-emoji">😞</span>
+                            <span class="text-xs text-gray-500">Awful</span>
+                        </button>
+                        <button type="button" onclick="selectMood(this, 'sad')"
+                                class="mood-btn bg-white border border-gray-200 shadow-sm">
+                            <span class="mood-emoji">😔</span>
+                            <span class="text-xs text-gray-500">Sad</span>
+                        </button>
+                        <button type="button" onclick="selectMood(this, 'okay')"
+                                class="mood-btn active bg-white border border-gray-200 shadow-sm">
+                            <span class="mood-emoji">😐</span>
+                            <span class="text-xs text-gray-500">Okay</span>
+                        </button>
+                        <button type="button" onclick="selectMood(this, 'good')"
+                                class="mood-btn bg-white border border-gray-200 shadow-sm">
+                            <span class="mood-emoji">🙂</span>
+                            <span class="text-xs text-gray-500">Good</span>
+                        </button>
+                        <button type="button" onclick="selectMood(this, 'great')"
+                                class="mood-btn bg-white border border-gray-200 shadow-sm">
+                            <span class="mood-emoji">😄</span>
+                            <span class="text-xs text-gray-500">Great</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ── Open text ───────────────────────────────────────── -->
+                <div class="mb-7">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-pen text-indigo-400 mr-2"></i>
+                        What's on your mind? <span class="text-red-400">*</span>
+                    </label>
+                    <textarea name="text" id="storyText" rows="5"
+                              placeholder="Write freely — how you feel, what's happening, what's hard or what's great..."
+                              class="w-full px-4 py-3 border border-gray-200 rounded-xl
+                                     focus:ring-2 focus:ring-indigo-300 focus:border-transparent
+                                     outline-none bg-white text-gray-700 text-sm
+                                     resize-none leading-relaxed"></textarea>
+                    <div class="flex justify-between mt-1.5">
+                        <p class="text-xs text-gray-400">
+                            <i class="fas fa-shield-alt mr-1"></i>Stored anonymously, never shared publicly
+                        </p>
+                        <span class="text-xs text-gray-400" id="charCount">0 / 500</span>
+                    </div>
+                </div>
+
+                <!-- ── Submit ──────────────────────────────────────────── -->
+                <button type="submit"
+                        class="w-full py-4 rounded-xl
+                               bg-gradient-to-r from-indigo-600 to-purple-600
+                               text-white font-bold text-lg
+                               hover:shadow-xl hover:shadow-indigo-200
+                               hover:-translate-y-0.5
+                               transition-all duration-300
+                               flex items-center justify-center gap-3">
+                    <i class="fas fa-paper-plane"></i>
+                    Share &amp; See My Result
+                </button>
+
+                <p class="text-center text-xs text-gray-400 mt-3">
+                    Your submission will be sentiment-analysed instantly by AI.
+                </p>
+
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         RECENT COMMUNITY SHARES
+    ═══════════════════════════════════════════════════════════════════ -->
+    {% if recent %}
+    <div class="max-w-4xl mx-auto mb-12">
+        <div class="text-center mb-6">
+            <h2 class="text-2xl font-bold gradient-text">Recent Community Shares</h2>
+            <p class="text-gray-500 text-sm mt-1">Anonymous voices from people like you</p>
+        </div>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {% for entry in recent %}
+            <div class="recent-card glass-card rounded-xl p-5 shadow-md">
+                <!-- Top row: name + category + time -->
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500
+                                    flex items-center justify-center text-white text-xs font-bold">
+                            {{ entry.name[0] | upper }}
+                        </div>
+                        <span class="text-sm font-semibold text-gray-700">{{ entry.name }}</span>
+                    </div>
+                    <span class="text-xs text-gray-400">{{ entry.created_at[5:16] }}</span>
+                </div>
+
+                <!-- Category + mood badges -->
+                <div class="flex items-center gap-2 mb-3 flex-wrap">
+                    <span class="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-full text-xs border border-indigo-100 capitalize">
+                        {{ entry.category | replace('_', ' ') }}
+                    </span>
+                    <span class="text-sm">
+                        {% if entry.mood == 'awful' %}😞
+                        {% elif entry.mood == 'sad' %}😔
+                        {% elif entry.mood == 'okay' %}😐
+                        {% elif entry.mood == 'good' %}🙂
+                        {% elif entry.mood == 'great' %}😄
+                        {% else %}😐{% endif %}
+                    </span>
+                    <span class="px-2 py-0.5 rounded-full text-xs border
+                                 {% if entry.sentiment == 'Positive' %}bg-green-50 text-green-600 border-green-100
+                                 {% elif entry.sentiment == 'Negative' %}bg-red-50 text-red-600 border-red-100
+                                 {% else %}bg-gray-100 text-gray-500 border-gray-200{% endif %}">
+                        {{ entry.sentiment }}
+                    </span>
+                </div>
+
+                <!-- Text snippet -->
+                <p class="text-gray-600 text-sm leading-relaxed line-clamp-3 italic">
+                    "{{ entry.text[:120] }}{% if entry.text|length > 120 %}…{% endif %}"
+                </p>
+
+                <!-- Score bar -->
+                <div class="mt-4">
+                    <div class="flex justify-between text-xs text-gray-400 mb-1">
+                        <span>Sentiment score</span>
+                        <span>{{ "%.2f"|format(entry.sentiment_score) }}</span>
+                    </div>
+                    <div class="w-full bg-gray-100 rounded-full h-1.5">
+                        <div class="h-1.5 rounded-full
+                                    {% if entry.sentiment == 'Positive' %}bg-green-400
+                                    {% elif entry.sentiment == 'Negative' %}bg-red-400
+                                    {% else %}bg-blue-400{% endif %}"
+                             style="width: {{ entry.sentiment_score * 100 }}%"></div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- ── Footer ──────────────────────────────────────────────────────────────── -->
+<footer class="py-8 bg-gradient-to-r from-gray-900 to-gray-800 text-white">
+    <div class="container mx-auto px-4">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <span class="text-2xl font-bold flex items-center gap-2">
+                    <i class="fas fa-robot text-blue-400"></i>SentiCureify
+                </span>
+                <p class="text-gray-400 text-sm mt-1">Advanced AI Sentiment Analysis</p>
+            </div>
+            <div class="flex gap-6 text-sm">
+                <a href="/"       class="text-gray-400 hover:text-blue-400 transition-colors flex items-center gap-1"><i class="fas fa-home"></i>Home</a>
+                <a href="/predict" class="text-gray-400 hover:text-blue-400 transition-colors flex items-center gap-1"><i class="fas fa-magic"></i>Analyze</a>
+                <a href="/process" class="text-gray-400 hover:text-blue-400 transition-colors flex items-center gap-1"><i class="fas fa-cogs"></i>Process</a>
+            </div>
+        </div>
+        <div class="border-t border-gray-700 mt-6 pt-6 text-center text-gray-500 text-sm">
+            &copy; 2025 SentiCureify — Built with VADER NLP &amp; Flask
+        </div>
+    </div>
+</footer>
+
+<script>
+    /* ── Category selection ─────────────────────────────────────────────── */
+    function selectCategory(btn, value) {
+        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('categoryInput').value = value;
+    }
+
+    /* ── Mood selection ─────────────────────────────────────────────────── */
+    function selectMood(btn, value) {
+        document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('moodInput').value = value;
+    }
+
+    /* ── Character counter ──────────────────────────────────────────────── */
+    const textArea  = document.getElementById('storyText');
+    const charCount = document.getElementById('charCount');
+    if (textArea) {
+        textArea.addEventListener('input', () => {
+            const len = textArea.value.length;
+            charCount.textContent = len + ' / 500';
+            if (len > 450) charCount.classList.add('text-red-400');
+            else           charCount.classList.remove('text-red-400');
+            if (len > 500) textArea.value = textArea.value.substring(0, 500);
+        });
+    }
+
+    /* ── Scroll result into view on submission ──────────────────────────── */
+    const result = document.querySelector('.fade-in');
+    if (result) {
+        setTimeout(() => result.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SentiCureify — Product Analyzer</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"/>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="/" class="navbar-brand">
+    <div class="logo-icon">💬</div>
+    SentiCureify
+  </a>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/predict">Analyze</a>
+    <a href="/product" class="active">Products</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/share">Community</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <div class="page-header">
+    <div class="page-title">🛒 Product review analyzer</div>
+    <div class="page-subtitle">Paste reviews — one per line. Get aspect breakdown, star rating, and buy/skip verdict.</div>
+  </div>
+
+  {% if error %}
+  <div class="alert alert-danger fade-up">
+    <span class="alert-icon">⚠️</span> {{ error }}
+  </div>
+  {% endif %}
+
+  <div class="card fade-up" style="margin-bottom:1.5rem;">
+    <div class="card-body">
+      <form method="POST">
+        <div class="form-group">
+          <label class="form-label">Reviews (one per line)</label>
+          <textarea name="reviews" class="form-textarea" rows="7"
+            placeholder="Great product, fast delivery!&#10;Battery life is terrible, very disappointed.&#10;Good value for money but packaging was damaged.&#10;Customer support was extremely helpful.&#10;Exactly as described, very happy with this purchase.">{{ reviews_text }}</textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full btn-lg">
+          🔍 Analyze reviews
+        </button>
+      </form>
+    </div>
+  </div>
+
+  {% if result %}
+
+  <!-- Verdict -->
+  <div class="alert alert-{{ result.verdict.color }} fade-up" style="padding:1.25rem 1.5rem;border-radius:var(--radius-lg);">
+    <span class="alert-icon" style="font-size:1.5rem;">{{ result.verdict.icon }}</span>
+    <div>
+      <strong style="font-size:1rem;">{{ result.verdict.label }}</strong><br>
+      <span style="font-size:0.875rem;">{{ result.verdict.reason }}</span>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stat-grid fade-up">
+    <div class="stat-card">
+      <div class="stat-value stat-ink">{{ result.total }}</div>
+      <div class="stat-label">Reviews analyzed</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value stat-amber">{{ result.avg_stars }} ★</div>
+      <div class="stat-label">Avg star rating</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value stat-green">{{ result.pos_pct }}%</div>
+      <div class="stat-label">Positive</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value stat-red">{{ result.neg_pct }}%</div>
+      <div class="stat-label">Negative</div>
+    </div>
+  </div>
+
+  <!-- Aspect breakdown -->
+  {% if result.aspect_scores %}
+  <div class="card fade-up" style="margin-bottom:1.25rem;">
+    <div class="card-body">
+      <div class="section-title">Aspect breakdown</div>
+      {% for aspect, data in result.aspect_scores.items() %}
+      <div class="aspect-row">
+        <div class="aspect-header">
+          <span class="aspect-name">{{ data.emoji }} {{ aspect | capitalize }}</span>
+          <span class="aspect-pct">{{ data.count }} mention{{ 's' if data.count != 1 }} · {{ data.pos_pct }}% positive</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-green" style="width:{{ data.pos_pct }}%"></div>
+          <div class="bar-gray"  style="width:{{ data.neu_pct }}%"></div>
+          <div class="bar-red"   style="width:{{ data.neg_pct }}%"></div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Highlights -->
+  {% if result.highlights.best or result.highlights.worst %}
+  <div class="card fade-up" style="margin-bottom:1.25rem;">
+    <div class="card-body">
+      <div class="section-title">Highlights</div>
+      {% if result.highlights.best %}
+      <div class="highlight highlight-pos">
+        <strong>Most positive:</strong> "{{ result.highlights.best }}"
+      </div>
+      {% endif %}
+      {% if result.highlights.worst %}
+      <div class="highlight highlight-neg">
+        <strong>Most critical:</strong> "{{ result.highlights.worst }}"
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- All reviews -->
+  <div class="card fade-up">
+    <div class="card-body">
+      <div class="section-title">All reviews ({{ result.total }})</div>
+      {% for r in result.reviews %}
+      <div class="review-item">
+        <span class="badge badge-{{ r.label }}" style="flex-shrink:0;margin-top:2px;">
+          {{ r.label | capitalize }}
+        </span>
+        <div>
+          <div class="review-text">{{ r.text }}</div>
+          <div class="review-meta">
+            {{ r.stars }} ★ · {{ r.confidence }}% · {{ r.aspects | join(', ') }}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% endif %}
+</div>
+
+<footer class="footer">
+  <span>© 2025 SentiCureify</span>
+  <span>Advanced AI Sentiment Analysis</span>
+</footer>
+
+</body>
+</html>

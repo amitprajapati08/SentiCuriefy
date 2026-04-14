@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SentiCureify — AI Sentiment Analysis</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"/>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="/" class="navbar-brand">
+    <div class="logo-icon">💬</div>
+    SentiCureify
+  </a>
+  <div class="nav-links">
+    <a href="/" class="active">Home</a>
+    <a href="/predict">Analyze</a>
+    <a href="/product">Products</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/share">Community</a>
+  </div>
+  <div class="nav-cta">
+    <a href="/predict" class="btn btn-primary btn-lg" style="padding:0.5rem 1.25rem;font-size:0.875rem;">
+      Try free →
+    </a>
+  </div>
+</nav>
+
+<div class="hero fade-up">
+  <div class="hero-tag">✨ Transformer-powered · Free to try</div>
+  <h1>Understand text<br><span>sentiment instantly</span></h1>
+  <p>Paste any text and get a full emotional breakdown in seconds — positive, negative, neutral, and everything in between. Powered by RoBERTa + VADER ensemble.</p>
+  <div class="hero-actions">
+    <a href="/predict" class="btn btn-primary btn-lg">✏️ Analyze text</a>
+    <a href="/product" class="btn btn-outline btn-lg">🛒 Product reviews</a>
+    <a href="/dashboard" class="btn btn-outline btn-lg">📊 Dashboard</a>
+  </div>
+</div>
+
+<div class="features-grid fade-up">
+  <div class="feature-card">
+    <div class="feature-icon">🧠</div>
+    <div class="feature-title">Transformer ensemble</div>
+    <div class="feature-text">RoBERTa + VADER blended for higher accuracy than either model alone.</div>
+  </div>
+  <div class="feature-card">
+    <div class="feature-icon">🛒</div>
+    <div class="feature-title">Product intelligence</div>
+    <div class="feature-text">Paste multiple reviews and get aspect-level breakdown with buy/skip verdict.</div>
+  </div>
+  <div class="feature-card">
+    <div class="feature-icon">📊</div>
+    <div class="feature-title">Live dashboard</div>
+    <div class="feature-text">Track sentiment trends, emotion patterns, and analysis history over time.</div>
+  </div>
+  <div class="feature-card">
+    <div class="feature-icon">⚡</div>
+    <div class="feature-title">Sub-second results</div>
+    <div class="feature-text">Model loads once at startup. Each analysis returns in under 200ms.</div>
+  </div>
+</div>
+
+<footer class="footer">
+  <span>© 2025 SentiCureify</span>
+  <span>Advanced AI Sentiment Analysis</span>
+</footer>
+
+</body>
+</html>
