@@ -127,7 +127,7 @@ python app.py
 
 ## Author
 Amit Prajapat  
-AI/ML Enthusiast and Full Stack Developer  
+AI/ML Developer 
 
 ---
 
